@@ -1,4 +1,4 @@
-#include <Daisy2.h>
+#include "Daisy2.h"
  
 // Plugged two Daisy2 to W3 with A+B configuration A+B
 Daisy2 stepperX(W3,A);
