@@ -14,7 +14,7 @@ void setup() {
 void loop() {
   for (int i=1; i<8; i++) {
     if (button.readButton(i) == HIGH) {
-      led.ledChange(i);
+      led.ledSwitch(i);
       delay(200);
     }    
   }
