@@ -8,7 +8,7 @@ void setup() {
  
 void loop() {
  
-  stepper.setSpeed(100);
+  stepper.setSpeed(500);
   stepper.step(3000);
   stepper.invertDirection();
   stepper.step(3000);

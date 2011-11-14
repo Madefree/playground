@@ -11,8 +11,8 @@ void setup() {
  
 void loop() {
  
-  stepperX.setSpeed(100);
-  stepperY.setSpeed(100);
+  stepperX.setSpeed(500);
+  stepperY.setSpeed(500);
   stepperX.step(3000);
   stepperY.step(3000);
   stepperX.invertDirection();

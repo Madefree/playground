@@ -10,9 +10,9 @@ void setup() {
   stepperY.begin();
   stepperZ.begin();
   for(int i=0; i<10; i++) {
-    stepperX.setSpeed(100);
-    stepperY.setSpeed(400);
-    stepperZ.setSpeed(400);
+    stepperX.setSpeed(500);
+    stepperY.setSpeed(500);
+    stepperZ.setSpeed(500);
     stepperX.step(3000);
     stepperY.step(200);
     stepperZ.step(200);
