@@ -1,5 +1,5 @@
 /* 
-  Settings up Daisy13 Teltonika module to wrok with BeeBoard on W4 port
+  Settings up Daisy13 Teltonika module to work with BeeBoard on W4 port
 */
 
 void setup() {
