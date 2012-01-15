@@ -1,10 +1,14 @@
 /* 
   Settings up Daisy13 Teltonika module to work with BeeBoard on W4 port
+    * Hold reset button
+    * Plug Daisy13 to W1
+    * Release reset button
+    * When the Tx LED stops flashing, you can disconnect Daisy-13 to W1
+    * Now the Teltonika modem is ready to work with the Bee to W4 port.
 */
 
 void setup() {
 
- /* Plug Daisy13 to W1 and release Reset button */
  Serial.begin(115200);
  Serial.println("AT&K0");  // Disable DTE Flow Control
  delay(600);
