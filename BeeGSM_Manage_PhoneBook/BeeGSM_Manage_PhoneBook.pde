@@ -101,8 +101,7 @@ int parseMsg(char* smsbuf)
         Serial.println(n);
       }
       #endif
-      
-      i=0;
+
       ret=1;
     }
   }
@@ -124,7 +123,6 @@ int parseMsg(char* smsbuf)
       Serial.println(name);
       Serial.print("Number: ");
       Serial.println(number);
-      i=0;
       ret = 1;
     }
   }
@@ -134,7 +132,6 @@ int parseMsg(char* smsbuf)
     Serial.print("Number of items: ");
     Serial.println(gsm.readAllPhoneBook(phonebook)); //returns number of items
     Serial.println(phonebook);
-    i=0;
     ret = 1;
   }
   else if (cmd.equals("FIND"))
@@ -153,8 +150,42 @@ int parseMsg(char* smsbuf)
       Serial.println(name);
       Serial.print("Number: ");
       Serial.println(number);
-      i=0;
       ret = 1;
+    }
+  }
+  else if (cmd.equals("CALL"))
+  {
+    i++;
+    for (i; i < msg.length(); i++)
+      num.concat(msg.charAt(i));
+    for (i=0; i < num.length(); i++)
+      number[i] = num.charAt(i);
+      
+    if (gsm.call(number, 10000))
+    {
+      Serial.print("\nCALL ");
+      Serial.println(number);
+      ret = 1;
+    }
+  }
+  else if (cmd.equals("CALLID"))
+  {
+    i++;
+    for (i; i < msg.length(); i++)
+      id.concat(msg.charAt(i));
+    
+    for (i=0; i < id.length(); i++)
+      bid[i] = id.charAt(i);
+    index = atoi(bid);
+    
+    if (gsm.readPhoneBook(index,number,name))
+    {
+      if (gsm.call(number, 10000))
+      {
+        Serial.print("\nCALL ");
+        Serial.println(number);
+        ret = 1;
+      }
     }
   }
   
