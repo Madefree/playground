@@ -89,10 +89,12 @@ int parseMsg(char* smsbuf)
     
     if (gsm.writePhoneBook(number,name))
     {
+      #ifdef SERIAL
       Serial.print("Write ");
       Serial.print(name);
       Serial.print(" ");
       Serial.println(number);
+      #endif
       
       #ifdef SMS
       if (gsm.call(n, 10000))
@@ -117,21 +119,42 @@ int parseMsg(char* smsbuf)
     
     if (gsm.readPhoneBook(index,number,name))
     {
+      #ifdef SERIAL
       Serial.print("Index: ");
       Serial.println(index);
       Serial.print("Name: ");
       Serial.println(name);
       Serial.print("Number: ");
       Serial.println(number);
+      #endif
+      
+      #ifdef SMS
+      smsbuf = "";
+      strcpy(smsbuf,"Index: ");
+      strcat(smsbuf,bid);
+      strcat(smsbuf,"\n");
+      strcat(smsbuf,"Name: ");
+      strcat(smsbuf,name);
+      strcat(smsbuf,"\n");
+      strcat(smsbuf,"Number: ");
+      strcat(smsbuf,number);
+      Serial.println(smsbuf);
+      Serial.println(n);
+      //gsm.sendSMS(n,smsbuf);
+      #endif
+      
       ret = 1;
     }
   }
   else if (cmd.equals("READALL"))
   {
+    #ifdef SERIAL
     //Read all phone book
     Serial.print("Number of items: ");
     Serial.println(gsm.readAllPhoneBook(phonebook)); //returns number of items
     Serial.println(phonebook);
+    #endif
+    
     ret = 1;
   }
   else if (cmd.equals("FIND"))
@@ -144,12 +167,15 @@ int parseMsg(char* smsbuf)
     
     if (gsm.findPhoneBook(findtext,index,number,name))
     {
+      #ifdef SERIAL
       Serial.print("Index: ");
       Serial.println(index);
       Serial.print("Name: ");
       Serial.println(name);
       Serial.print("Number: ");
       Serial.println(number);
+      #endif
+      
       ret = 1;
     }
   }
@@ -163,8 +189,19 @@ int parseMsg(char* smsbuf)
       
     if (gsm.call(number, 10000))
     {
+      #ifdef SERIAL
       Serial.print("\nCALL ");
       Serial.println(number);
+      #endif
+      
+      #ifdef SMS
+      if (gsm.call(n, 10000))
+      {
+        Serial.print("\nCALL ");
+        Serial.println(n);
+      }
+      #endif
+      
       ret = 1;
     }
   }
@@ -182,8 +219,11 @@ int parseMsg(char* smsbuf)
     {
       if (gsm.call(number, 10000))
       {
+        #ifdef SERIAL
         Serial.print("\nCALL ");
         Serial.println(number);
+        #endif
+        
         ret = 1;
       }
     }
