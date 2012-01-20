@@ -78,7 +78,7 @@ int parseMsg(char* smsbuf)
       nam.concat(msg.charAt(i));
     
     i++;
-    for (i; i < msg.length(); i++)
+    for (i; i < msg.indexOf(".",i); i++)
       num.concat(msg.charAt(i));
     
     for (i=0; i < nam.length(); i++)
@@ -110,7 +110,7 @@ int parseMsg(char* smsbuf)
   else if (cmd.equals("READ"))
   {
     i++;
-    for (i; i < msg.length(); i++)
+    for (i; i < msg.indexOf(".",i); i++)
       id.concat(msg.charAt(i));
     
     for (i=0; i < id.length(); i++)
@@ -160,7 +160,7 @@ int parseMsg(char* smsbuf)
   else if (cmd.equals("FIND"))
   {
     i++;
-    for (i; i < msg.length(); i++)
+    for (i; i < msg.indexOf(".",i); i++)
       nam.concat(msg.charAt(i));
     for (i=0; i < nam.length(); i++)
       findtext[i] = nam.charAt(i);
@@ -182,7 +182,7 @@ int parseMsg(char* smsbuf)
   else if (cmd.equals("CALL"))
   {
     i++;
-    for (i; i < msg.length(); i++)
+    for (i; i < msg.indexOf(".",i); i++)
       num.concat(msg.charAt(i));
     for (i=0; i < num.length(); i++)
       number[i] = num.charAt(i);
@@ -208,7 +208,7 @@ int parseMsg(char* smsbuf)
   else if (cmd.equals("CALLID"))
   {
     i++;
-    for (i; i < msg.length(); i++)
+    for (i; i < msg.indexOf(".",i); i++)
       id.concat(msg.charAt(i));
     
     for (i=0; i < id.length(); i++)
