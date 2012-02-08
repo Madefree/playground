@@ -1,3 +1,17 @@
+/*  BeeGSM - Manage Phone Book
+ *
+ *
+ *  Command list:
+ *
+ *  ADD:name,mumber.
+ *  READ:index.
+ *  READALL:
+ *  FIND:textfind.
+ *  CALL:number.
+ *  CALLID:index.
+ *
+ */
+
 #include <TeltonikaTM1Q.h>
 #include <NewSoftSerial.h>
 
@@ -24,7 +38,7 @@ void setup()
   #endif
   
   //Serial connection.
-  Serial.begin(9600);
+  Serial.begin(57600);
   Serial.println("BeeGSM, manage Phone Book with SMS");
   //Start configuration.
   gsm.debug(false);
@@ -61,6 +75,7 @@ int parseMsg(char* smsbuf)
   String num = "";
   int index = 0;
   char bid[3] = "";
+  char bitem[3] = "";
   char name[20] = "";
   char number[20] = "";
   int ret = 0;
@@ -140,7 +155,7 @@ int parseMsg(char* smsbuf)
       strcat(smsbuf,number);
       Serial.println(smsbuf);
       Serial.println(n);
-      //gsm.sendSMS(n,smsbuf);
+      gsm.sendSMS(n,smsbuf);
       #endif
       
       ret = 1;
@@ -148,11 +163,25 @@ int parseMsg(char* smsbuf)
   }
   else if (cmd.equals("READALL"))
   {
+    int items = gsm.readAllPhoneBook(phonebook); //returns number of items
+    sprintf(bitem,"%d",items);
+    
     #ifdef SERIAL
     //Read all phone book
     Serial.print("Number of items: ");
-    Serial.println(gsm.readAllPhoneBook(phonebook)); //returns number of items
+    Serial.println(items);
     Serial.println(phonebook);
+    #endif
+    
+    #ifdef SMS
+    smsbuf = "";
+    strcpy(smsbuf,"N. of Items: ");
+    strcat(smsbuf,bitem);
+    strcat(smsbuf,"\n");
+    strcat(smsbuf,phonebook);
+    Serial.println(smsbuf);
+    Serial.println(n);
+    gsm.sendSMS(n,smsbuf);
     #endif
     
     ret = 1;
@@ -174,6 +203,22 @@ int parseMsg(char* smsbuf)
       Serial.println(name);
       Serial.print("Number: ");
       Serial.println(number);
+      #endif
+      
+      #ifdef SMS
+      sprintf(bid,"%d",index);
+      smsbuf = "";
+      strcpy(smsbuf,"Index: ");
+      strcat(smsbuf,bid);
+      strcat(smsbuf,"\n");
+      strcat(smsbuf,"Name: ");
+      strcat(smsbuf,name);
+      strcat(smsbuf,"\n");
+      strcat(smsbuf,"Number: ");
+      strcat(smsbuf,number);
+      Serial.println(smsbuf);
+      Serial.println(n);
+      gsm.sendSMS(n,smsbuf);
       #endif
       
       ret = 1;
