@@ -1,8 +1,6 @@
-#include <Daisy4.h>
 #include "TeltonikaTM1Q.h"
 #include <NewSoftSerial.h>
-
-char n[15];
+#include <Daisy4.h>
 
 Daisy4 relay(W3,DIP2);
 
@@ -11,38 +9,37 @@ void setup()
   //Serial connection.
   Serial.begin(9600);
   relay.begin();
-  Serial.println("BEE Toll free remote control via GSM");
+  Serial.println("Bee Board Toll free remote control");
   //Start configuration.
+  gsm.debug(false);
   if (gsm.begin())
     Serial.println("\nstatus=READY");
   else Serial.println("\nstatus=IDLE");
-  gsm.debug(false);  //Disable gsm Serial Debug
-}
+};
 
 void loop() 
 {
-  
-  if(gsm.readCall(n,20))
-  {
-    Serial.println(n);
-    if( qualified_sim_number(n)) {  //  Important: the number stored in SIM CARD must be saved with the International prefix
-                                    //  Exaple : +391231456789                                       
-      relay.relayOn();
-      delay(1000);
-      relay.relayOff();
-    }
-    else
-      Serial.println("Number is not authorized!");
-  }
-}
+  char number[20];
+  boolean auth;
 
-boolean qualified_sim_number(char *number) {
-  char number_en[15];
-  char info[100];
-  for(int i=1; i<100; i++) {
-    gsm.readPhoneBook(i,number_en,info);
-    if(strcmp(number_en,number)==0) 
-      return true;
+  if(gsm.readCallAuthPhoneBook(number,20,auth)) {  // Important: the number stored in SIM CARD must be saved with the International prefix
+                                         // Example : +391231456789  
+                                         
+      if(auth) {
+          Serial.print("Number ");
+          Serial.print(number);
+          Serial.println(" authorized !");
+          Serial.println("Relay ON");
+          relay.relayOn();
+          delay(1000);
+          relay.relayOff();
+          Serial.println("Relay OFF");
+        
+      } else {
+          Serial.print("Number ");
+          Serial.print(number);
+          Serial.println(" is not authorized!");
+      }
   }
-  return false;
-}
+};
+
