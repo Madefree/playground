@@ -35,37 +35,37 @@ void setup()
 
 void loop() 
 {
-   if(button.readButton(P1) == LOW ) {   //  Button P1 : send SMS preset 1
+   if(button.readButton(P1) == HIGH ) {   //  Button P1 : send SMS preset 1
      gsm.sendSMS(NUMBER_PRESET_1,SMS_PRESET_1);
      Serial.println("Send SMS Preset 1");
      delay(50);
    }
-   if(button.readButton(P2) == LOW ) {   //  Button P2 : send SMS preset 2
+   if(button.readButton(P2) == HIGH ) {   //  Button P2 : send SMS preset 2
      gsm.sendSMS(NUMBER_PRESET_2,SMS_PRESET_2);
      Serial.println("Send SMS Preset 2");
      delay(50);
    }
-   if(button.readButton(P3) == LOW ) {   //  Button P3 : send SMS preset 3
+   if(button.readButton(P3) == HIGH ) {   //  Button P3 : send SMS preset 3
      gsm.sendSMS(NUMBER_PRESET_3,SMS_PRESET_3);
      Serial.println("Send SMS Preset 3");
      delay(50);
    }
-   if(button.readButton(P4) == LOW ) {   //  Button P4 : send SMS preset 4
+   if(button.readButton(P4) == HIGH ) {   //  Button P4 : send SMS preset 4
      gsm.sendSMS(NUMBER_PRESET_1,SMS_PRESET_4);
      Serial.println("Send SMS Preset 4");
      delay(50);
    }
-   if(button.readButton(P5) == LOW ) {   //  Button P5 : send SMS preset 5
+   if(button.readButton(P5) == HIGH ) {   //  Button P5 : send SMS preset 5
      gsm.sendSMS(NUMBER_PRESET_5,SMS_PRESET_5);
      Serial.println("Send SMS Preset 5");
      delay(50);
    }
-   if(button.readButton(P6) == LOW ) {   //  Button P6 : send SMS preset 6
+   if(button.readButton(P6) == HIGH ) {   //  Button P6 : send SMS preset 6
      gsm.sendSMS(NUMBER_PRESET_6,SMS_PRESET_6);
      Serial.println("Send SMS Preset 6");
      delay(50);
    }
-   if(button.readButton(P7) == LOW ) {   //  Button P7 : send SMS preset 7
+   if(button.readButton(P7) == HIGH ) {   //  Button P7 : send SMS preset 7
      gsm.sendSMS(NUMBER_PRESET_7,SMS_PRESET_7);
      Serial.println("Send SMS Preset 7");
      delay(50);
