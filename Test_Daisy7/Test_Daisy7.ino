@@ -10,8 +10,9 @@ void setup()
 {
   // Initialize the serial port.
   Serial.begin(9600);
-  // Start the I2C interface.
-  Wire.begin();
+  
+  // IMU begin
+  imu.begin();
     
   Serial.println("Setting scale to +/- 1.3 Ga");
   error = imu.MagnSetScale(1.3); // Set the scale of the imu.
@@ -22,10 +23,7 @@ void setup()
   error = imu.MagnSetMeasurementMode(Measurement_Continuous); // Set the measurement mode to Continuous
   if(error != 0) // If there is an error, print it out.
     Serial.println(imu.MagnGetErrorText(error));
-    
-       imu.AccConfig();
-       
-  imu.GyroEnableDefault();
+
 }
 
 // Our main program loop.
@@ -62,8 +60,6 @@ void loop()
 
   // Output the data via the serial port.
   Output(raw, scaled, heading, headingDegrees);
-
-  imu.BaroCalibration();
   float temp=imu.BaroGetTemperature(imu.bmp085ReadUT());
   float pressure = imu.BaroGetPressure(imu.bmp085ReadUP());
   float atm = pressure / 101325;
@@ -71,9 +67,9 @@ void loop()
   Serial.print("Temp: ");
   Serial.println(temp);
   Serial.print("Pressure: ");
-  Serial.println(pressure);
+  Serial.println(pressure/100);
   Serial.print("Altitude: ");
-  Serial.print(altitude);
+  Serial.println(altitude);
 
   AccelerometerRaw val;
   val=imu.Accelerometer();
@@ -85,14 +81,15 @@ void loop()
   Serial.print(" Z:");
   Serial.println(val.ZAxis);
    
-  imu.GyroRead();
+  GyroRaw g;
+  g = imu.GyroRead();
 
   Serial.print("GYRO X:");
-  Serial.print((int)imu.g.x);
+  Serial.print((int)g.XAxis);
   Serial.print(" Y:");
-  Serial.print((int)imu.g.y);
+  Serial.print((int)g.YAxis);
   Serial.print(" Z:");
-  Serial.println((int)imu.g.z);
+  Serial.println((int)g.ZAxis);
    
   Serial.println();
    
