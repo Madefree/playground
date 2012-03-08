@@ -2,19 +2,42 @@
 #include "Daisy7.h"
 #include <SD.h>
 
+#define WATCHDOG // Comment this line to disable watchdog
+
+#ifdef WATCHDOG
+#include <avr/io.h>
+#include <avr/wdt.h>
+#endif
+
+#define DUMP_INTERVAL 200 // Stored value interval [ms]
 #define SD_CHIPSEL 10
 #define MAGN_FILE "MAG_DUMP.CSV"
 #define ACC_FILE "ACC_DUMP.CSV"
 #define GYRO_FILE "GYR_DUMP.CSV"
 #define BARO_FILE "BAR_DUMP.CSV"
 
+#define PIN_RESET_FILE  9//Remove old CSV file at boot
+
 Daisy7 imu;
 
-// Record any errors that may occur in the imu.
-int error = 0;
 
 void setup()
 {
+
+#ifdef WATCHDOG
+  wdt_enable(WDTO_4S); //Watchdog 4 secondi
+#endif
+
+#ifdef PIN_RESET_FILE
+  pinMode(PIN_RESET_FILE,INPUT);
+  if(digitalRead(PIN_RESET_FILE)==HIGH) {
+    SD.remove(MAGN_FILE);
+    SD.remove(ACC_FILE);
+    SD.remove(GYRO_FILE);
+    SD.remove(BARO_FILE);
+  }
+#endif
+
   Serial.begin(9600);
   // IMU begin
   imu.begin();
@@ -32,7 +55,8 @@ void setup()
        data += "Raw-X,Raw-Y,Raw-Z,Scaled-X,Scaled-Y,Scaled-Z,Heading-Rad,Heading-Deg";
        dataFile.println(data);
        dataFile.close();
-     }
+     } 
+    
      if (!SD.exists(ACC_FILE)) {
        dataFile = SD.open(ACC_FILE, FILE_WRITE);
        data = "";
@@ -58,10 +82,18 @@ void setup()
        dataFile.close();
      }
   }
+  
+#ifdef WATCHDOG
+  wdt_reset();
+#endif
 }
 
 void loop()
 {
+  
+#ifdef WATCHDOG
+  wdt_reset();
+#endif
   String data = "";
   char buff[20];
   
@@ -120,6 +152,9 @@ void loop()
     data += buff;
     dataFile.println(data); 
   }
+#ifdef WATCHDOG
+   else resetBee();
+#endif
   dataFile.close();
   
   data="";
@@ -137,6 +172,9 @@ void loop()
     data += buff;
     dataFile.println(data);
   }
+#ifdef WATCHDOG
+   else resetBee();
+#endif
   dataFile.close();
   
   data=""; 
@@ -154,6 +192,9 @@ void loop()
     data += buff;
     dataFile.println(data);
   }
+#ifdef WATCHDOG
+   else resetBee();
+#endif
   dataFile.close();
   
   data="";
@@ -172,8 +213,17 @@ void loop()
     data += buff;
     dataFile.println(data);
   }
+#ifdef WATCHDOG
+   else resetBee();
+#endif
   dataFile.close();
 
-  delay(100); // Interval DUMP
+  delay(DUMP_INTERVAL); // Interval DUMP
 }
+
+#ifdef WATCHDOG
+void resetBee() {
+  while(1) {}
+}
+#endif
 
