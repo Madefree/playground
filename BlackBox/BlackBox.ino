@@ -1,229 +1,203 @@
 #include "Wire.h"
 #include "Daisy7.h"
-#include <SD.h>
+#include "gps.h"
+#include "SD.h"
+#include "TimerOne.h"
 
-#define WATCHDOG // Comment this line to disable watchdog
-
-#ifdef WATCHDOG
-#include <avr/io.h>
-#include <avr/wdt.h>
-#endif
-
-#define DUMP_INTERVAL 200 // Stored value interval [ms]
+#define DUMP_INTERVAL 200 // Store interval [ms]
 #define SD_CHIPSEL 10
-#define MAGN_FILE "MAG_DUMP.CSV"
-#define ACC_FILE "ACC_DUMP.CSV"
-#define GYRO_FILE "GYR_DUMP.CSV"
-#define BARO_FILE "BAR_DUMP.CSV"
+#define FILE "DUMP.CSV"
 
-#define PIN_RESET_FILE  9//Remove old CSV file at boot
+Daisy7 imu; // Daisy7 object
 
-Daisy7 imu;
-
+volatile boolean gps_ready = false; // GPS decode status
 
 void setup()
 {
+  Serial.begin(115200);
+  gps_setup();
 
-#ifdef WATCHDOG
-  wdt_enable(WDTO_4S); //Watchdog 4 secondi
-#endif
-
-#ifdef PIN_RESET_FILE
-  pinMode(PIN_RESET_FILE,INPUT);
-  if(digitalRead(PIN_RESET_FILE)==HIGH) {
-    SD.remove(MAGN_FILE);
-    SD.remove(ACC_FILE);
-    SD.remove(GYRO_FILE);
-    SD.remove(BARO_FILE);
-  }
-#endif
-
-  Serial.begin(9600);
-  // IMU begin
+  // Daisy7 IMU begin
   imu.begin();
-  
+
   imu.MagnSetScale(1.3); // Set the scale of the imu.
   imu.MagnSetMeasurementMode(Measurement_Continuous); // Set the measurement mode to Continuous
-  
-  // SD begin
-  if(SD.begin(SD_CHIPSEL)) {
-     String data="";
-     File dataFile;
-     if (!SD.exists(MAGN_FILE)) {
-       dataFile = SD.open(MAGN_FILE, FILE_WRITE);
-       data += "Magnetometer Dump File\n";
-       data += "Raw-X,Raw-Y,Raw-Z,Scaled-X,Scaled-Y,Scaled-Z,Heading-Rad,Heading-Deg";
-       dataFile.println(data);
-       dataFile.close();
-     } 
+
+  // SD card begin
+  if (SD.begin(SD_CHIPSEL))
+  {     
+    // Open File
+    File dataFile;
     
-     if (!SD.exists(ACC_FILE)) {
-       dataFile = SD.open(ACC_FILE, FILE_WRITE);
-       data = "";
-       data += "Accelerometer Dump File\n";
-       data += "Raw-X,Raw-Y,Raw-Z";
-       dataFile.println(data);
-       dataFile.close();
-     }
-     if (!SD.exists(GYRO_FILE)) {
-       dataFile = SD.open(GYRO_FILE, FILE_WRITE);
-       data = "";
-       data += "Gyroscope Dump File\n";
-       data += "Raw-X,Raw-Y,Raw-Z";
-       dataFile.println(data);
-       dataFile.close();
-     }
-      if (!SD.exists(BARO_FILE)) {
-       dataFile = SD.open(BARO_FILE, FILE_WRITE);
-       data = "";
-       data += "Barometer Dump File\n";
-       data += "Temperature[C],Pressure[mb],Altitude[m]";
-       dataFile.println(data);
-       dataFile.close();
-     }
+    // CSV Header
+    if (!SD.exists(FILE))
+    {
+      dataFile = SD.open(FILE, FILE_WRITE);
+      dataFile.println(F("GPS-Time,GPS-Latitude,GPS-Longitude,GPS-Course,GPS-Speed,GPS-Altitude,Magn-X,Magn-Y,Magn-Z,Acc-X,Acc-Y,Acc-Z,Gyro-X,Gyro-Y,Gyro-Z,Temperature,Pressure,Altitude"));
+      dataFile.close();
+    }
   }
   
-#ifdef WATCHDOG
-  wdt_reset();
-#endif
+  // TimerOne init
+  Timer1.initialize(1000); // 1000 us
+  Timer1.attachInterrupt(gpsEvent);
 }
+
 
 void loop()
 {
-  
-#ifdef WATCHDOG
-  wdt_reset();
-#endif
   String data = "";
   char buff[20];
-  
-  File dataFile = SD.open(MAGN_FILE, FILE_WRITE);
-  if(dataFile) {
-     // Retrive the raw values from the imu (not scaled).
-    MagnetometerRaw raw = imu.MagnReadRawAxis();
-    // Retrived the scaled values from the imu (scaled to the configured scale).
-    MagnetometerScaled scaled = imu.MagnReadScaledAxis();
-  
-    // Values are accessed like so:
-    int MilliGauss_OnThe_XAxis = scaled.XAxis;// (or YAxis, or ZAxis)
-
-    // Calculate heading when the magnetometer is level, then correct for signs of axis.
-    float heading = atan2(scaled.YAxis, scaled.XAxis);
-  
-    // Once you have your heading, you must then add your 'Declination Angle', which is the 'Error' of
-    // the magnetic field in your location. Find yours here: http://www.magnetic-declination.com/
-
-    // If you cannot find your Declination, comment out these two lines, your imu will be slightly off.
-    float declinationAngle = 0.0457;
-    heading += declinationAngle;
-  
-    // Correct for when signs are reversed.
-    if(heading < 0)
-      heading += 2*PI;
-    
-    // Check for wrap due to addition of declination.
-    if(heading > 2*PI)
-      heading -= 2*PI;
+ 
+  // Open File
+  File dataFile = SD.open(FILE, FILE_WRITE);
    
-    // Convert radians to degrees for readability.
-    float headingDegrees = heading * 180/M_PI; 
-    dtostrf(raw.XAxis, 4, 4, buff);
+  if (dataFile)
+  {
+    if (gps_ready)
+    {
+      // GPS Time
+      String time = String(gps_time);
+      data += time;
+      data += ",";
+      
+      // GPS Latitude
+      dtostrf(gps_lat, 4, 4, buff);
+      data += buff;
+      data += ",";
+      
+      // GPS Longitude
+      dtostrf(gps_lon, 4, 4, buff);
+      data += buff;
+      data += ",";
+      
+      // GPS Course
+      dtostrf(gps_course, 4, 4, buff);
+      data += buff;
+      data += ",";
+      
+      // GPS Speed
+      dtostrf(gps_speed, 4, 4, buff);
+      data += buff;
+      data += ",";
+      
+      // GPS Altitude
+      dtostrf(gps_altitude, 4, 4, buff);
+      data += buff;
+      data += ",";
+      
+      // Store GPS data
+      dataFile.print(data);
+      data = "";
+      
+      gps_ready = false;
+    }
+    else
+      dataFile.print(",,,,,,");
+   
+    // Retrieve the Raw Values from the Magnetometer.
+    MagnetometerRaw magn = imu.MagnReadRawAxis();
+    
+    // Magnetometer Raw X
+    dtostrf(magn.XAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(raw.YAxis, 4, 4, buff);
+    
+    // Magnetometer Raw Y
+    dtostrf(magn.YAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(raw.ZAxis, 4, 4, buff);
+    
+    // Magnetometer Raw Z
+    dtostrf(magn.ZAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(scaled.XAxis, 4, 4, buff);
+    
+    // Store Magnetometer data
+    dataFile.print(data);
+    data = "";
+
+    // Retrieve the Raw Values from the Accelerometer.
+    AccelerometerRaw acc;
+    acc = imu.Accelerometer();
+    
+    // Accelerometer Raw X
+    dtostrf(acc.XAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(scaled.YAxis, 4, 4, buff);
+    
+    // Accelerometer Raw Y
+    dtostrf(acc.YAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(scaled.ZAxis, 4, 4, buff);
+    
+    // Accelerometer Raw Z
+    dtostrf(acc.ZAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(heading, 4, 4, buff);
+ 
+    // Store Accelerometer data
+    dataFile.print(data);
+    data = "";
+
+    // Retrieve the Raw Values from the Gyroscope.
+    GyroRaw gyro;
+    gyro = imu.GyroRead();
+    
+    // Gyroscope Raw X
+    dtostrf(gyro.XAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(headingDegrees, 4, 4, buff);
-    data += buff;
-    dataFile.println(data); 
-  }
-#ifdef WATCHDOG
-   else resetBee();
-#endif
-  dataFile.close();
-  
-  data="";
-  dataFile = SD.open(ACC_FILE, FILE_WRITE);
-  if(dataFile) {
-    AccelerometerRaw val;
-    val=imu.Accelerometer();
-    dtostrf(val.XAxis, 4, 4, buff);
+    
+    // Gyroscope Raw Y
+    dtostrf(gyro.YAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(val.YAxis, 4, 4, buff);
+    
+    // Gyroscope Raw Z
+    dtostrf(gyro.ZAxis, 4, 4, buff);
     data += buff;
     data += ",";
-    dtostrf(val.ZAxis, 4, 4, buff);
-    data += buff;
-    dataFile.println(data);
-  }
-#ifdef WATCHDOG
-   else resetBee();
-#endif
-  dataFile.close();
-  
-  data=""; 
-  dataFile = SD.open(GYRO_FILE, FILE_WRITE);
-  if(dataFile) {
-    GyroRaw g;
-    g = imu.GyroRead();
-    dtostrf(g.XAxis, 4, 4, buff);
-    data += buff;
-    data += ",";
-    dtostrf(g.YAxis, 4, 4, buff);
-    data += buff;
-    data += ",";
-    dtostrf(g.ZAxis, 4, 4, buff);
-    data += buff;
-    dataFile.println(data);
-  }
-#ifdef WATCHDOG
-   else resetBee();
-#endif
-  dataFile.close();
-  
-  data="";
-  dataFile = SD.open(BARO_FILE, FILE_WRITE);
-  if(dataFile) {
-    float temp=imu.BaroGetTemperature(imu.bmp085ReadUT());
+    
+    // Store Gyroscope data
+    dataFile.print(data);
+    data = "";
+
+    // Retrieve the Values from the Barometer.
+    float temp = imu.BaroGetTemperature(imu.bmp085ReadUT());
     float pressure = imu.BaroGetPressure(imu.bmp085ReadUP());
     float altitude = imu.calcAltitude(pressure);
+    
+    // Barometer Temperature
     dtostrf(temp, 4, 4, buff);
     data += buff;
     data += ",";
+    
+    // Barometer Pressure
     dtostrf(pressure/100, 4, 4, buff);
     data += buff;
     data += ",";
+    
+    // Barometer Altitude
     dtostrf(altitude, 4, 4, buff);
     data += buff;
+    
+    // Store Barometer data
     dataFile.println(data);
   }
-#ifdef WATCHDOG
-   else resetBee();
-#endif
+  
+  // Close File
   dataFile.close();
-
-  delay(DUMP_INTERVAL); // Interval DUMP
+  
+  delay(DUMP_INTERVAL);
 }
 
-#ifdef WATCHDOG
-void resetBee() {
-  while(1) {}
-}
-#endif
 
+void gpsEvent() {
+  int val;
+  while (Serial.available()) {
+    val = Serial.read();
+    if (gps_decode(val))
+      gps_ready = true;
+  }
+}
