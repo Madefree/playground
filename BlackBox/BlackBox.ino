@@ -26,7 +26,7 @@ void setup()
   imu.begin();           // Daisy7 IMU begin
 
   imu.MagnSetScale(1.3); // Set the scale of the magnetometer.
-  imu.MagnSetMeasurementMode(Measurement_Continuous); // Set MAgnetometer measurement mode to Continuous
+  imu.MagnSetMeasurementMode(Measurement_Continuous); // Set Magnetometer measurement mode
 
   if (SD.begin(SD_CHIPSEL))   // SD card begin
   {
@@ -51,11 +51,11 @@ void setup()
       dataFile.println(F("BEE Board BlackBox Dump CSV"));
       dataFile.print(F("Dump Interval,"));
       dataFile.print(String(DUMP_INTERVAL));
-      dataFile.println(",ms\n");
-      dataFile.println(F("GPS-Date (DDMMYY),GPS-Time (HHMMSS),GPS-Latitude,\
-                            GPS-Longitude,GPS-Course,GPS-Speed,GPS-Altitude,Magn-X,\
-                            Magn-Y,Magn-Z,Acc-X,Acc-Y,Acc-Z,Gyro-X,Gyro-Y,Gyro-Z,\
-                            Temperature,Pressure,Altitude"));
+      dataFile.println(F(",ms\n"));
+      dataFile.print(F("GPS-Date (DDMMYY),GPS-Time (HHMMSS),GPS-Latitude,"));
+      dataFile.print(F("GPS-Longitude,GPS-Course,GPS-Speed,GPS-Altitude,Magn-X,"));
+      dataFile.print(F("Magn-Y,Magn-Z,Acc-X,Acc-Y,Acc-Z,Gyro-X,Gyro-Y,Gyro-Z,"));
+      dataFile.println(F("Temperature,Pressure,Altitude"));
       dataFile.close();
     }
   }
