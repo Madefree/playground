@@ -7,24 +7,23 @@ nsamples = length(data);
 step = 0.2;
 t = (0:step:step*(nsamples-1));  % seconds
 
-time = data(:,1);
-lat = data(:,2);
-lon = data(:,3);
-course = data(:,4);
-speed = data(:,5);
-alt = data(:,6);
-magnX = data(:,7);
-magnY = data(:,8);
-magnZ = data(:,9);
-accX = data(:,10);
-accY = data(:,11);
-accZ = data(:,12);
-gyroX = data(:,13);
-gyroY = data(:,14);
-gyroZ = data(:,15);
-baroTemp = data(:,16);
-baroPres = data(:,17);
-baroAlt = data(:,18);
+lat = data(:,3);
+lon = data(:,4);
+course = data(:,5);
+speed = data(:,6);
+alt = data(:,7);
+magnX = data(:,8);
+magnY = data(:,9);
+magnZ = data(:,10);
+accX = data(:,11);
+accY = data(:,12);
+accZ = data(:,13);
+gyroX = data(:,14);
+gyroY = data(:,15);
+gyroZ = data(:,16);
+baroTemp = data(:,17);
+baroPres = data(:,18);
+baroAlt = data(:,19);
 
 figure
 latlim = [min(lat)-0.001 max(lat)+0.001];
@@ -32,6 +31,11 @@ lonlim = [min(lon)-0.001 max(lon)+0.001];
 worldmap(latlim,lonlim)
 plotm(lat,lon)
 title('Tour Map')
+
+figure
+plot(t,course)
+title('GPS Course')
+xlabel('Time [s]')
 
 figure
 plot(t,speed)
