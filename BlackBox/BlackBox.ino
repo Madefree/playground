@@ -32,15 +32,14 @@ void setup()
   {
     if (digitalRead(BUTTON) == LOW)  // Reset dump file when Button is pressed at boot
     {
+      for (int i=0; i<4; i++)
+      {
+        pinMode(STATE_LED, OUTPUT);
+        delay(500);
+        pinMode(STATE_LED, INPUT);
+        delay(500);
+      }
       SD.remove(FILE);
-      pinMode(STATE_LED, OUTPUT);
-      delay(500);
-      pinMode(STATE_LED, INPUT);
-      delay(500);
-      pinMode(STATE_LED, OUTPUT);
-      delay(500);
-      pinMode(STATE_LED, INPUT);
-      delay(1000);
     }
     
     // Open File
@@ -50,10 +49,13 @@ void setup()
     {
       dataFile = SD.open(FILE, FILE_WRITE);
       dataFile.println(F("BEE Board BlackBox Dump CSV"));
-      dataFile.print(F("Dump Interval: "));
+      dataFile.print(F("Dump Interval,"));
       dataFile.print(String(DUMP_INTERVAL));
-      dataFile.println(" ms");
-      dataFile.println(F("GPS-Time,GPS-Latitude,GPS-Longitude,GPS-Course,GPS-Speed,GPS-Altitude,Magn-X,Magn-Y,Magn-Z,Acc-X,Acc-Y,Acc-Z,Gyro-X,Gyro-Y,Gyro-Z,Temperature,Pressure,Altitude"));
+      dataFile.println(",ms\n");
+      dataFile.println(F("GPS-Date (DDMMYY),GPS-Time (HHMMSS),GPS-Latitude,\
+                            GPS-Longitude,GPS-Course,GPS-Speed,GPS-Altitude,Magn-X,\
+                            Magn-Y,Magn-Z,Acc-X,Acc-Y,Acc-Z,Gyro-X,Gyro-Y,Gyro-Z,\
+                            Temperature,Pressure,Altitude"));
       dataFile.close();
     }
   }
@@ -85,6 +87,11 @@ void loop()
       /*************  GPS Data   **************/
       if (gps_ready) // if GPS data are valid
       {
+        // Append GPS Date
+        String date = String(gps_date);
+        data += date;
+        data += ",";
+        
         // Append GPS Time
         String time = String(gps_time);
         data += time;
@@ -122,7 +129,7 @@ void loop()
         gps_ready = false;
       }
       else 
-        dataFile.print(",,,,,,");
+        dataFile.print(",,,,,,,");
      
      /*************  Magnetometer Data   **************/
      
